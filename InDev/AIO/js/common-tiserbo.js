@@ -9,7 +9,9 @@
 //******************************************************************************
 
 // Global Variables
-var modules = [];						/*!< Array with all modules */
+var modules = [];														/*!< Array with all modules */
+var moduleLoaded = "";													/*!< Module loaded */
+var addressLink = "/projects/tiserbo.be/coruscante/index.html?"			/*!< Var who contains the main address link */
 
 //******************************************************************************
 //*																			   *
@@ -73,6 +75,42 @@ function url_pop() {
 	window.history.back();
 }
 
+/*! @brief Load Module from URL
+ *	This function load a Module directly from url typed
+ */
+function url_load() {
+	var mod = "-1";
+	var pos = 0;
+	var module = url_getParam("module");
+	var error = url_getParam("error");
+	if (module != null && module != "00000" && error == null) {
+		for (var i = 0; i < modules.length; i++)
+			if (module == modules[i]["callcode"]) {
+				var params = url_getAllParams();
+				mod = module;
+				pos = i;
+				break;
+			}
+	} else if ((module == "00000" || module == null) && error == null)
+		mod = "0";
+	if (mod == "-1" && error != null) {
+		switch (error) {
+		case "403":
+			return 403;
+			break;
+		case "500":
+			return 500;
+			break;
+		default:
+			return 404;
+			break;
+		}
+	} else if (mod != "0") {
+		var params = url_getAllParams();
+		setModule(modules[pos]["name"], params)
+	}
+}
+
 //******************************************************************************
 //*																			   *
 //* PART 1 : Modules											   			   *
@@ -87,7 +125,91 @@ function modules_get(moduleXML, nodeName) {
 	modules = xml2Array(moduleXML, nodeName);
 }
 
+/*! @brief Set Module
+ *  This function set the module to state active
+ *  @param[in]	modName		The name of the module to activate
+ *	@param[in]	param		Parameters for the module
+ */
+function setModule(modName, param) {
+	var trouve = false
+	for (var i = 0; i < modules.length; i++)
+		if (modules[i]["name"] == modName) {
+			trouve = true;
+			break;
+		}
+	if (trouve) {
+		moduleLoaded = modName;
+		loadModule(modName, param);
+		return 0;
+	} else {
+		moduleLoaded = "";
+		return 404;
+	}
+}
 
+/*! @brief Unset Module
+ *  This function set the module to state inactive
+ *  @param[in]	modName		The name of the module to deactivate
+ */
+function unsetModule(modName, newMod, param) {
+	var trouve = false
+	for (var i = 0; i < modules.length; i++)
+		if (modules[i]["name"] == modName) {
+			trouve = true;
+			break;
+		}
+	if (trouve) {
+		moduleLoaded = "";
+	    $('html').find('script[src="modules/' + modName + '/' + modName + '"]').remove();
+	}
+	if (newMod != null) {
+		if (newMod == "error403")
+			return 403;
+		else if (newMod == "error404")
+			return 404;
+		else if (newMod == "error500")
+			return 500;
+		else
+			setModule(newMod, param);
+	} else {
+		return 0;
+	}
+}
+
+/*! @brief Loading module in user
+ *  This function load the module in user
+ *  @param[in]	fctload		Name of the function to load the module
+ *  @param[in]	namejs		Name of the script to load the module
+ */
+function loadModule(modName, param) {
+	var fctLoad = "";
+	var namejs = "";
+	var codeModule = "";
+	for (var i = 0; i < modules.length; i++)
+		if(modules[i]["name"] == modName) {
+			fctLoad = modules[i].fctload;
+			namejs = modules[i]["namejs"];
+			codeModule = modules[i]["callcode"];
+			break;
+		}
+	if (fctLoad != "" && namejs != "") {
+		$.getScript("modules/" + moduleLoaded + "/" + namejs)
+			.done(function(){
+				var query = "";
+				if (param != null)
+					for (var j = 0; j < param.length; j = j + 2)
+						query = query + "&" + param[j] + "=" + param[j + 1];
+				url_push("module=" + codeModule, query);
+				var fct = eval(fctLoad);
+				fct(param);
+			})
+			.fail(function(){
+				return 404;
+		});
+	} else {
+		return 404;
+	}
+}
 
 //******************************************************************************
 //*																			   *
