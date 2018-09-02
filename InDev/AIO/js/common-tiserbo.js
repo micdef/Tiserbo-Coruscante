@@ -107,7 +107,7 @@ function url_load() {
 		}
 	} else if (mod != "0") {
 		var params = url_getAllParams();
-		setModule(modules[pos]["name"], params)
+		modules_set(modules[pos]["name"], params)
 	}
 }
 
@@ -130,7 +130,7 @@ function modules_get(moduleXML, nodeName) {
  *  @param[in]	modName		The name of the module to activate
  *	@param[in]	param		Parameters for the module
  */
-function setModule(modName, param) {
+function modules_set(modName, param) {
 	var trouve = false
 	for (var i = 0; i < modules.length; i++)
 		if (modules[i]["name"] == modName) {
@@ -140,7 +140,6 @@ function setModule(modName, param) {
 	if (trouve) {
 		moduleLoaded = modName;
 		loadModule(modName, param);
-		return 0;
 	} else {
 		moduleLoaded = "";
 		return 404;
@@ -151,7 +150,7 @@ function setModule(modName, param) {
  *  This function set the module to state inactive
  *  @param[in]	modName		The name of the module to deactivate
  */
-function unsetModule(modName, newMod, param) {
+function modules_unset(modName, newMod, param) {
 	var trouve = false
 	for (var i = 0; i < modules.length; i++)
 		if (modules[i]["name"] == modName) {
@@ -170,7 +169,7 @@ function unsetModule(modName, newMod, param) {
 		else if (newMod == "error500")
 			return 500;
 		else
-			setModule(newMod, param);
+			modules_set(newMod, param);
 	} else {
 		return 0;
 	}
@@ -181,7 +180,7 @@ function unsetModule(modName, newMod, param) {
  *  @param[in]	fctload		Name of the function to load the module
  *  @param[in]	namejs		Name of the script to load the module
  */
-function loadModule(modName, param) {
+function modules_load(modName, param) {
 	var fctLoad = "";
 	var namejs = "";
 	var codeModule = "";
