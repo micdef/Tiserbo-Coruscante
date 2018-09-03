@@ -1,3 +1,25 @@
+CREATE TABLE sys_country
+(	id					SERIAL			NOT NULL,
+ 	code				VARCHAR(10)		NOT NULL,
+ 	flag				VARCHAR(4000)	NOT NULL,
+ 	intercode			VARCHAR(10)		NOT NULL,
+ 	ue					BOOLEAN			NOT NULL,
+ 	flagactive			BOOLEAN			NOT NULL,
+ 	flagdelete			BOOLEAN			NOT NULL,
+ 	CONSTRAINT 	"PK-SYS_Country-ID"						PRIMARY KEY		(id),
+ 	CONSTRAINT	"UK-SYS_Country-Code"					UNIQUE			(code),
+);
+
+CREATE TABLE sys_zipcode
+(	idcountry			INT				NOT NULL,
+ 	zipcode				VARCHAR(25)		NOT NULL,
+ 	city				VARCHAR(255)	NOT NULL,
+ 	flagactive			BOOLEAN			NOT NULL,
+ 	flagdelete			BOOLEAN			NOT NULL,
+ 	CONSTRAINT	"PK-SYS_ZipCode-IDC_ZC_City"			PRIMARY KEY		(idcountry, zipcode, city),
+ 	CONSTRAINT	"FK-SYS_ZipCode-IDCountry"				FOREIGN KEY		(idcountry)						REFERENCES	sys_country(id),
+);
+
 CREATE TABLE mod_module
 (	id					SERIAL			NOT NULL,
  	name				VARCHAR(50)		NOT NULL,
@@ -13,9 +35,6 @@ CREATE TABLE mod_module
 	CONSTRAINT 	"UK-MOD_Module-Name"					UNIQUE			(name),
 	CONSTRAINT 	"UK-MOD_Module-NameJS"					UNIQUE			(namejs)
 );
-
-INSERT INTO sys_module (name, descr, callcode, fctload, namejs, flagactive, flagmaintenant, flagdelete) VALUES ('accueil', 'Module présentation produit et entreprise', '00000', 'accueil_load', 'accueil.js', true, true, false, false);
-INSERT INTO sys_module (name, descr, callcode, fctload, namejs, flagactive, flagmaintenant, flagdelete) VALUES ('user', 'Module de gestion des utilisateurs', '00001', 'user_load', 'user.js', true, true, false, false);
 
 CREATE TABLE usr_user
 (	id					SERIAL			NOT NULL,
@@ -61,8 +80,8 @@ CREATE TABLE usr_usergroup
 (	iduser				INT				NOT NULL,
  	idgroup				INT				NOT NULL,
  	CONSTRAINT	"PK-USR_UserGroup-IDU_IDG"				PRIMARY KEY		(iduser, idgroup),
- 	CONSTRAINT	"FK-USR_UserGroup-IDUser"				FOREIGN KEY		(iduser)						REFERENCES usr_user(id),
- 	CONSTRAINT	"FK-USR_UserGroup-IDGroup"				FOREIGN KEY		(idgroup)						REFERENCES usr_group(id)
+ 	CONSTRAINT	"FK-USR_UserGroup-IDUser"				FOREIGN KEY		(iduser)						REFERENCES 	usr_user(id),
+ 	CONSTRAINT	"FK-USR_UserGroup-IDGroup"				FOREIGN KEY		(idgroup)						REFERENCES 	usr_group(id)
 );
 
 CREATE TABLE usr_right
@@ -81,8 +100,8 @@ CREATE TABLE usr_groupright
  	flagupdate			BOOLEAN			NOT NULL,
  	flagdelete			BOOLEAN			NOT NULL,
  	CONSTRAINT	"PK-USR_GroupRight-IDG_IDR"				PRIMARY KEY		(idgroup, idright),
- 	CONSTRAINT	"FK-USR_GroupRight-IDGroup"				FOREIGN KEY		(idgroup)						REFERENCES usr_group(id),
- 	CONSTRAINT	"FK-USR_GroupRight-IDRight"				FOREIGN KEY		(idright)						REFERENCES usr_right(id)
+ 	CONSTRAINT	"FK-USR_GroupRight-IDGroup"				FOREIGN KEY		(idgroup)						REFERENCES 	usr_group(id),
+ 	CONSTRAINT	"FK-USR_GroupRight-IDRight"				FOREIGN KEY		(idright)						REFERENCES 	usr_right(id)
 );
 
 CREATE TABLE usr_userright
@@ -92,6 +111,43 @@ CREATE TABLE usr_userright
  	flagupdate			BOOLEAN			NOT NULL,
  	flagdelete			BOOLEAN			NOT NULL,
  	CONSTRAINT	"PK-USR_UserRight-IDU_IDR"				PRIMARY KEY		(iduser, idright),
- 	CONSTRAINT	"FK-USR_UserRight-IDUser"				FOREIGN KEY		(iduser)						REFERENCES usr_user(id),
- 	CONSTRAINT	"FK-USR_UserRight-IDRight"				FOREIGN KEY		(idright)						REFERENCES usr_right(id)
+ 	CONSTRAINT	"FK-USR_UserRight-IDUser"				FOREIGN KEY		(iduser)						REFERENCES 	usr_user(id),
+ 	CONSTRAINT	"FK-USR_UserRight-IDRight"				FOREIGN KEY		(idright)						REFERENCES 	usr_right(id)
+);
+
+CREATE TABLE usr_usernote
+(	id					SERIAL			NOT NULL,
+ 	iduserconcerned		INT				NOT NULL,
+ 	iduserwriter		INT				NOT NULL,
+ 	datein				DATE			NOT NULL,
+ 	timein				DATE			NOT NULL,
+ 	note				VARCHAR(4000)	NOT NULL,
+ 	flagdelete			BOOLEAN			NOT NULL,
+ 	CONSTRAINT	"PK-USR_UserNote-ID"					PRIMARY KEY		(id),
+ 	CONSTRAINT	"FK-USR_UserNote-IDUC"					FOREIGN KEY		(iduserconcerned)				REFERENCES 	usr_user(id),
+ 	CONSTRAINT	"FK-USR_UserNote-IDUW"					FOREIGN KEY		(iduserwriter)					REFERENCES 	usr_user(id),
+ 	CONSTRAINT	"UK-USR_UserNote-IDUC_IDUW_DI_TI"		UNIQUE			(iduserconcerned, iduserwriter, datein, timein)
+);
+
+CREATE TABLE tra_lang
+(	id					SERIAL			NOT NULL,
+ 	code				VARCHAR(5)		NOT NULL,
+ 	flag				VARCHAR(4000)	NOT NULL,
+ 	flagactive			BOOLEAN			NOT NULL,
+ 	flagdelete			BOOLEAN			NOT NULL,
+ 	CONSTRAINT	"PK-TRA_Lang-ID"						PRIMARY KEY		(id),
+ 	CONSTRAINT	"UK-TRA_Lang-Code"						UNIQUE			(code)
+);
+
+CREATE TABLE tra_translation
+(	id					SERIAL			NOT NULL,
+ 	idmodule			INT				NOT NULL,
+ 	idlang				INT				NOT NULL,
+ 	namepart			VARCHAR(50)		NOT NULL,
+ 	namefield			VARCHAR(50)		NOT NULL,
+ 	text				VARCHAR(4000)	NOT NULL,
+ 	CONSTRAINT	"PK-TRA_Translation-ID"					PRIMARY KEY		(id),
+ 	CONSTRAINT	"FK-TRA_Translation-IDLang"				FOREIGN KEY		(idlang)						REFERENCES 	tra_lang(id),
+ 	CONSTRAINT	"FK-TRA_Translation-IDModule"			FOREIGN KEY		(idmodule)						REFERENCES 	mod_module(id),
+ 	CONSTRAINT	"UK-TRA_Translation-IDM_IDL_NP_NF"		UNIQUE			(idmodule, idlang, namepart, namefield)
 );
