@@ -73,6 +73,7 @@
 		 *	@param[in]	$lname			User's last name (Can be optional)
 		 *	@param[in]	$gender			User's gender (Can be optional)
 		 *	@param[in] 	$tel			User's telephone number
+		 *	@usage		$this->newParam($email, $pwd, $dateIN, $timeIN, $factive, $fdelete, $fname, $lname, $gender, $tel)
 		 */
 		public function newParam($email, $pwd, $dateIN, $timeIN, $factive, $fdelete, $fname, $lname, $gender, $tel) {
 			$this->idDB = 0;
@@ -93,6 +94,8 @@
 		 *  Function who construct the object using de the database
 		 * 	@param[in]	$email			User's email
 		 * 	@param[in]	$id				User's database ID
+		 *	@usage		$this->newDB($email, 0)
+		 *				$this->newDB(null, $id)
 		 */
 		public function newDB($email, $id) {
 			try {
@@ -155,7 +158,10 @@
 		//* PART 5 : SETTERS															 *
 		//*																				 *
 		//********************************************************************************
-		public function setEmail($email) {}
+		public function setEmail($email) {
+			if ($this->checkMail($email))
+				$this->email = $email;
+		}
 		public function setDateIN($datein) { $this->dateIN = $datein; }
 		public function setTimeIN($timein) { $this->timeIN = $timein; }
 		private function setActive($factive) { $this->flagActive = $factive; }
@@ -170,11 +176,22 @@
 		//* PART 6 : Private functions													 *
 		//*																				 *
 		//********************************************************************************
+		/*!	@brief Check mail in Database
+		 *	This function checks if the given mail is in the database or not
+		 *	@param[in]	$mail		The email to check
+		 *	@retval		True		If the mail is not present in the DB
+		 *				False		If the mail is present in the DB
+		 *	@usage		$this->checkMail($mail)
+		 */
 		private function checkMail($mail) {
 			$sql = "SELECT * FROM " . $this->table . " WHERE email = '" . $mail . "'";
 			return !isElemExists($sql, $_SESSION["email"]);
 		}
 		
+		/*! @brief Erase Error
+		 *	This function sets the error variable to null;
+		 *	@usage		$this->eraseError()
+		 */
 		private function eraseError() {
 			$this->err = null;
 		}
@@ -184,6 +201,10 @@
 		//* PART 7 : DB Functions														 *
 		//*																				 *
 		//********************************************************************************
+		/*! @brief DataBase Base User Insert
+		 *	This function inserts the User's basic information into the DataBase
+		 *	@usage		$this->dbInsert();
+		 */
 		private function dbInsert() {
 			try {
 				if ($this->checkMail($this->email)) {
@@ -208,6 +229,10 @@
 			}
 		}
 		
+		/*! @brief DataBase User's Additional Info Insert
+		 *	This function inserts the User's additional information into the DataBase
+		 *	@usage		$this->dbInsertInfo()
+		 */
 		private function dbInsertInfo() {
 			try {
 				$sql = "INSERT INTO " . $this->table_info . " (iduser, fname, lname, gender, tel) ";
@@ -225,6 +250,10 @@
 			}
 		}
 		
+		/*! @brief DataBase Base User Update
+		 *	This function updates the User's basic information in the DataBase
+		 *	@usage		$this->dbUpdate()
+		 */
 		private function dbUpdate() {
 			try {
 				$sql = "SELECT email FROM " . $this->table . " WHERE id = " . $this->idDB;
@@ -251,11 +280,20 @@
 			}
 		}
 		
+		/*! @brief DataBase User's Additional Info Update
+		 *	This function updates the User's additional information in the DataBase
+		 *	@usage		$this->dbUpdateInfo()
+		 */
 		private function dbUpdateInfo() {
 			try {
 				if (!($this->fName == null && $this->lName == null && $this->gender == null $ $this->tel == null)) {
 					$sql = "UPDATE " . $this->table_info . " SET ";
-					
+					if ($this->fname != null) $sql .= "fname = '" . $this->fName . "', ";
+					if ($this->lname != null) $sql .= "lname = '" . $this->lName . "', ";
+					if ($this->gender != null) $sql .= "gender = '" . $this->gender . "', ";
+					if ($this->tel != null) $sql .= "tel = '" . $this->tel . "', ";
+					rtrim($sql, ', ');
+					$sql .= " WHERE id = " . $this->idDB;
 				} 
 				
 			} catch (Exception $ex) {
@@ -271,7 +309,106 @@
 		//* PART 8 : Public functions													 *
 		//*																				 *
 		//********************************************************************************
+		/*! @brief Interface Function for checkMail
+		 * 	This function is used as an interface for function nammed checkMail
+		 *	@param[in]	$mail		The email to check
+		 *	@retval		True		If the mail is not present in the DB
+		 *				False		If the mail is present in the DB	
+		 *	@usage		<var> = <var>->I_checkMail($mail)
+		 */
+		public function I_checkMail($mail) {
+			return $this->checkMail($mail);
+		}
 		
+		/*! @brief Interface Function for eraseError
+		 *  This function is used as an interface for function nammed eraseError
+		 *	@usage		<var>->I_eraseError()
+		 */
+		public function I_eraseError() {
+			$this->eraseError();
+		}
+		
+		/*! @brief Interface Function for dbInsert
+		 *	This function is used as an interface for function nammed dbInsert
+		 *	@usage		<var>->I_inserUser()
+		 */
+		public function I_insertUser() {
+			$this->dbInsert();
+		}
+		
+		/*! @brief Interface Function for dbInsertInfo
+		 *	This function is used as an interface for function nammed dbInsertInfo
+		 *	@usage		<var>->I_insertUserInfo()
+		 */
+		public function I_insertUserInfo() {
+			$this->dbInsertInfo();
+		}
+		
+		/*! @brief Interface Function for dbUpdate
+		 *	This function is used as an interface for function nammed dbUpdate
+		 *	@usage		<var>->I_updateUser()
+		 */
+		public function I_updateUser() {
+			$this->dbUpdate();
+		}
+		
+		/*! @brief Interface Function for dbUpdateInfo
+		 *	This function is used as an interface for function nammed dbUpdateInfo
+		 *	@usage		<var>->I_updateUserInfo()
+		 */
+		public function I_updateUserInfo() {
+			$this->dbUpdateInfo();
+		}
+		
+		/*! @brief Interface Function for dbInsert and dbInsertInfo
+		 *	This function is used as an interface to group functions dbInsert and dbInsertInfo
+		 *	@usage		<var>->I_inserAll()
+		 */
+		public function I_insertAll() {
+			$this->dbInsert();
+			$this->dbInsertInfo();
+		}
+		
+		/*! @brief Interface Function for dbUpdate and dbUpdateInfo
+		 *	This function is used as an interface to group functions dbUpdate and dbUpdateInfo
+		 *	@usage		<var>->I_updateALL()
+		 */
+		public function I_updateAll() {
+			$this->dbUpdate();
+			$this->dbUpdateInfo();
+		}
+		
+		/*! @brief Interface Function for User's Activation
+		 *	This function is used as an interface to activate the user
+		 *	@usage		<var>->I_activate()
+		 */
+		public function I_activate() {
+			$this->setActive(true);
+		}
+		
+		/*! @brief Interface Function for User's Deactivation
+		 *	This function is used as an interface to deactivate the user
+		 *	@usage		<var>->I_deactivate()
+		 */
+		public function I_deactivate() {
+			$this->setActive(false);
+		}
+		
+		/*! @brief Interface Function for User's Suppression
+		 *	This function is used as an interface to delete the user
+		 *	@usage		<var>->I_delete()
+		 */
+		public function I_delete() {
+			$this->setDelete(true);
+		}
+		
+		/*! @brief Interface Function for User's Recover
+		 *	This function is used as an interface to undelete the user
+		 *	@usage		<var>->I_undelete()
+		 */
+		public function I_undelete() {
+			$this->setDelete(false);
+		}
 		
 		//********************************************************************************
 		//*																				 *
@@ -284,6 +421,28 @@
 		//* PART 10 : Override functions												 *
 		//*																				 *
 		//********************************************************************************
+		/*! @brief Verify if an object is the than the current object
+		 *	This function checks if the current object is the same than the object sent in parameter
+		 *	@param[in]	$user	The object to be verified
+		 *	@retval		True	If the objects are the same
+		 *				False	If the objects are not the same
+		 *	@usage		<var>->equals($user)
+		 */
+		public function equals($user) {
+			if ($this->$idDB == $this->getDataBaseID() && 
+				$this->$email == $this->getEmail() &&
+				$this->$dateIN == $this->getDateIn() && 
+				$this->$timeIN == $this->getTimeIn() &&
+				$this->$flagActive == $this->isActive() &&
+				$this->$flagDelete == $this->isDeleted() &&
+				$this->$fName == $this->getFirstName() &&
+				$this->$lName == $this->getLastName() && 
+				$this->$gender == $this->getGender() &&
+				$this->$tel == $this->getTelephoneNumber())
+				return true;
+			else
+				return false;
+		} 
 		
 	}
 
